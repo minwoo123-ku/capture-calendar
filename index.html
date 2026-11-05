@@ -75,27 +75,24 @@
   @media (min-width: 960px) { #view-home h1 { margin-top: 72px; } .lead { margin-top: 24px; } }
   .view-title { margin: 20px 0 0; font-size: clamp(1.7rem, 1.3rem + 1.6vw, 2.3rem); }
 
-  /* ---- 처음 화면: 큰 버튼 두 개 ---- */
-  .home-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 36px; }
-  .tile {
-    position: relative; display: flex; flex-direction: column; justify-content: space-between; gap: 28px;
-    min-height: 168px; padding: 20px 18px 18px; border-radius: 20px; text-decoration: none;
-    background: var(--card); border: 1px solid var(--line); color: var(--ink); box-shadow: var(--shadow);
+  /* ---- 처음 화면: 큰 버튼 두 개를 위아래로. 위(일정 넣기)가 더 크다 ---- */
+  .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  .choices { display: grid; gap: 14px; margin-top: 24px; }
+  .choice {
+    display: flex; flex-direction: column; justify-content: space-between; gap: 24px;
+    padding: 24px 22px 22px; border-radius: 24px; text-decoration: none;
+    border: 1px solid var(--line); background: var(--card); color: var(--ink); box-shadow: var(--shadow);
     transition: transform 0.15s;
   }
-  .tile:hover { transform: translateY(-2px); }
-  .tile.dark { background: var(--accent); border-color: var(--accent); color: var(--btn-ink); }
-  .tile strong { display: block; font-size: 1.5rem; font-weight: 800; letter-spacing: -0.03em; }
-  .tile .tile-sub { display: block; font-size: 0.88rem; opacity: 0.75; margin-top: 2px; }
-  .tile-icon { position: relative; display: grid; place-items: center; width: 44px; height: 44px; font-size: 1.5rem; font-weight: 300; }
-  .tile.dark .tile-icon { font-size: 1.05rem; font-weight: 800; }
-  .tile.dark .loop { color: var(--hl); }
-  .next { margin-top: 36px; }
-  .next h2 { font-size: 0.95rem; font-weight: 700; color: var(--soft); margin: 0 0 6px; }
-  .next-list { list-style: none; margin: 0; padding: 0; }
-  .next-list li { display: grid; grid-template-columns: 64px 1fr; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--line); color: var(--ink); }
-  .next-list .d8 { font-weight: 800; font-variant-numeric: tabular-nums; }
-  .next-empty { color: var(--soft); font-size: 0.92rem; margin: 0; }
+  .choice:hover { transform: translateY(-2px); }
+  .choice:active { transform: scale(0.99); }
+  .choice.add { min-height: clamp(260px, 44vh, 400px); background: var(--accent); border-color: var(--accent); color: var(--btn-ink); }
+  .choice.view { min-height: clamp(180px, 28vh, 260px); }
+  .choice-text strong { display: block; font-size: clamp(2rem, 1.6rem + 2vw, 2.8rem); font-weight: 800; letter-spacing: -0.04em; line-height: 1.2; }
+  .choice-text span { display: block; margin-top: 6px; font-size: 0.95rem; opacity: 0.75; }
+  .choice-icon { position: relative; display: grid; place-items: center; width: 52px; height: 52px; font-size: 1.7rem; font-weight: 300; }
+  .choice.add .loop { color: var(--hl); }
+  .choice.view .choice-icon { font-size: 1.15rem; font-weight: 800; }
 
   /* ---- 캘린더 화면: 날짜 라벨 아래로 할 일을 쭉 ---- */
   .agenda { margin-top: 28px; }
@@ -294,30 +291,24 @@
     <a id="back" class="back" href="#" hidden>처음으로</a>
   </header>
 
-  <!-- 처음 화면 -->
+  <!-- 처음 화면: 하고 싶은 일을 고르는 큰 버튼 두 개 -->
   <section id="view-home" class="view narrow" aria-labelledby="home-title">
-    <h1 id="home-title" tabindex="-1">캡처 한 장이,<br>내 <mark>일정</mark>이 되도록.</h1>
-    <p class="lead">카톡, 문자, 메일 캡처 속 약속을 찾아요.<br>내가 확인한 일정만 이 기기에 저장해요.</p>
-    <div class="home-actions">
-      <a class="tile" href="#capture">
-        <span class="tile-icon" aria-hidden="true"><svg class="loop"><use href="#loop"/></svg>+</span>
-        <span><strong>캡처</strong><span class="tile-sub">캡처 올려서 일정 저장</span></span>
+    <h1 id="home-title" class="sr-only" tabindex="-1">무엇을 할까요?</h1>
+    <nav class="choices" aria-label="할 일 고르기">
+      <a class="choice add" href="#capture">
+        <span class="choice-icon" aria-hidden="true"><svg class="loop"><use href="#loop"/></svg>+</span>
+        <span class="choice-text"><strong>일정 넣기</strong><span>캡처를 올리면 일정을 찾아 줘요</span></span>
       </a>
-      <a class="tile dark" href="#list">
-        <span class="tile-icon" aria-hidden="true"><svg class="loop"><use href="#loop"/></svg><span id="tile-day"></span></span>
-        <span><strong>캘린더</strong><span id="home-count" class="tile-sub">저장한 일정 보기</span></span>
+      <a class="choice view" href="#list">
+        <span class="choice-icon" aria-hidden="true"><svg class="loop"><use href="#loop"/></svg><span id="tile-day"></span></span>
+        <span class="choice-text"><strong>일정 확인</strong><span id="home-count">저장한 일정 보기</span></span>
       </a>
-    </div>
-    <div class="next">
-      <h2>다가오는 일정</h2>
-      <ul id="next-list" class="next-list"></ul>
-      <p id="next-empty" class="next-empty" hidden>아직 저장한 일정이 없어요. 캡처부터 올려 보세요.</p>
-    </div>
+    </nav>
   </section>
 
   <!-- 캘린더 화면: 날짜 라벨 + 할 일 목록 -->
   <section id="view-list" class="view narrow" aria-labelledby="list-title" hidden>
-    <h1 id="list-title" class="view-title" tabindex="-1">캘린더</h1>
+    <h1 id="list-title" class="view-title" tabindex="-1">일정 확인</h1>
     <p class="lead">이 기기에 저장한 일정이에요. 끝낸 일은 체크해 두세요.</p>
     <div id="agenda" class="agenda"></div>
     <details id="past" class="past" hidden>
@@ -326,15 +317,15 @@
     </details>
     <div id="list-empty" class="empty" hidden>
       아직 저장한 일정이 없어요.<br>
-      <a class="btn" href="#capture">캡처 올리러 가기</a>
+      <a class="btn" href="#capture">일정 넣으러 가기</a>
     </div>
   </section>
 
   <!-- 캡처 화면 -->
   <section id="view-capture" class="view capture-layout" aria-labelledby="capture-title" hidden>
   <aside id="intro" class="intro">
-    <h1 id="capture-title" class="view-title" tabindex="-1">캡처 올리기</h1>
-    <p class="lead">찾은 일정이 달력에 표시돼요.<br>확인하고 저장하면 캘린더에 들어가요.</p>
+    <h1 id="capture-title" class="view-title" tabindex="-1">일정 넣기</h1>
+    <p class="lead">캡처 속 일정을 찾아 달력에 표시해요.<br>확인하고 저장하면 "일정 확인"에 들어가요.</p>
     <div id="months" class="months" aria-label="찾은 일정이 들어갈 달력"></div>
     <p id="months-note" class="months-note" hidden></p>
   </aside>
@@ -382,7 +373,7 @@
       <p id="locked" class="sub">위 일정을 확인하고 '확인 완료'를 누르면 열려요.</p>
       <div id="export" hidden>
         <ul id="summary" class="summary"></ul>
-        <button id="save" type="button" class="btn primary">캘린더에 저장</button>
+        <button id="save" type="button" class="btn primary">저장하기</button>
         <p class="hint">이 기기의 이 브라우저에만 저장돼요. 다른 기기와는 공유되지 않아요.</p>
         <p id="save-error" class="error" hidden></p>
       </div>
@@ -815,16 +806,8 @@
 
   function renderHome() {
     const today = P.todaySeoul();
-    const upcoming = loadSaved().filter((e) => lastDay(e) >= today && !e.done).sort(byWhen);
-    $('home-count').textContent = upcoming.length ? `남은 일정 ${upcoming.length}개` : '저장한 일정 보기';
-    const ul = $('next-list');
-    ul.textContent = '';
-    upcoming.slice(0, 3).forEach((e) => {
-      const li = el('li');
-      li.append(el('span', 'd8', shortDate(e.date)), el('span', null, e.title));
-      ul.append(li);
-    });
-    $('next-empty').hidden = upcoming.length > 0;
+    const left = loadSaved().filter((e) => lastDay(e) >= today && !e.done).length;
+    $('home-count').textContent = left ? `남은 일정 ${left}개` : '저장한 일정 보기';
   }
 
   // 오늘·내일·D-n
@@ -1215,7 +1198,7 @@
     state.confirmed = false;
     const note = $('saved-note');
     note.textContent = `일정 ${result.added}개를 저장했어요.` + (result.skipped ? ` 이미 있던 ${result.skipped}개는 뺐어요.` : '');
-    const go = el('a', null, '캘린더에서 보기');
+    const go = el('a', null, '일정 확인으로 가기');
     go.href = '#list';
     note.append(go);
     note.hidden = false;
