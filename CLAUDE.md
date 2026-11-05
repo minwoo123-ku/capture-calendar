@@ -35,7 +35,7 @@
 
 ## 구조
 
-- `index.html` 화면, CSS, OCR 연결, 저장. 화면은 해시로 셋: `#` 처음(버튼 두 개), `#capture` 캡처 올리기·확인·저장, `#list` 날짜별 할 일 목록과 캘린더에 넣기(일정마다 Google 링크, 한꺼번에 .ics)
-- `parser.js` 순수 함수: `normalizeText`, `detectBaseDate`, `extractEvents`, `todaySeoul`, `buildGoogleUrl`, `buildICS(events, alarm, now)`. 일정 모양은 `{title,date,endDate,start,end,allDay,location,memo,isDeadline,warnings}`이고 `endDate`는 여러 날 일정의 마지막 날(그날 포함)이다.
+- `index.html` 화면, CSS, OCR 연결, 저장. 화면은 해시로 셋: `#` 처음(버튼 두 개), `#capture` 캡처 올리기·확인·저장, `#list` 날짜별 할 일 목록
+- `parser.js` 순수 함수: `normalizeText`, `detectBaseDate`, `extractEvents`, `todaySeoul` (③-3에서 `buildGoogleUrl`, `buildICS` 추가). 일정 모양은 `{title,date,endDate,start,end,allDay,location,memo,isDeadline,warnings}`이고 `endDate`는 여러 날 일정의 마지막 날(그날 포함)이다.
 - `test/parser.test.js` node:test 단위 테스트
 - `plan.md` 계획과 확정된 해석 규칙

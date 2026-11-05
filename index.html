@@ -116,28 +116,6 @@
   .todo li.done .t { text-decoration: line-through; color: var(--soft); }
   .todo .del { font: inherit; font-size: 0.82rem; color: var(--soft); background: none; border: 0; padding: 4px 0; cursor: pointer; }
   .todo .del:hover { color: var(--sun); }
-  /* 일정마다 Google 캘린더에 넣기 */
-  .todo .acts { grid-column: 2 / -1; display: flex; align-items: center; gap: 10px; margin-top: 4px; }
-  .add-cal {
-    display: inline-flex; align-items: center; gap: 6px; font-size: 0.86rem; font-weight: 600; color: var(--ink);
-    text-decoration: none; border: 1.5px solid var(--ink); border-radius: 999px; padding: 5px 12px 5px 10px;
-  }
-  .add-cal:hover { background: var(--soft-fill); }
-  .add-cal svg { width: 15px; height: 15px; }
-  .add-cal.sent { border-color: var(--line-strong); color: var(--soft); font-weight: 500; }
-  .acts .sent-note { font-size: 0.8rem; color: var(--soft); }
-  .todo li.done .add-cal { display: none; }
-  /* 남은 일정 한꺼번에 받기 */
-  .export { margin: 22px 0 6px; padding: 14px 16px; border-radius: 14px; background: var(--soft-fill); font-size: 0.9rem; color: var(--text); line-height: 1.6; }
-  .export p { margin: 0; }
-  .export summary { cursor: pointer; color: var(--ink); font-weight: 600; margin-top: 8px; }
-  .export .row { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-top: 10px; }
-  .export select {
-    font: inherit; color: var(--text); background: var(--field); border: 1px solid var(--line-strong);
-    border-radius: 10px; padding: 8px 10px; min-height: 42px;
-  }
-  .export .btn { padding: 9px 14px; }
-  .export .hint { margin: 8px 0 0; font-size: 0.82rem; }
   .past { margin-top: 36px; }
   .past summary { cursor: pointer; color: var(--soft); font-size: 0.92rem; margin-bottom: 8px; }
   .empty { margin-top: 32px; padding: 28px 20px; border: 1.5px dashed var(--line-strong); border-radius: 16px; text-align: center; color: var(--soft); }
@@ -332,23 +310,6 @@
   <section id="view-list" class="view narrow" aria-labelledby="list-title" hidden>
     <h1 id="list-title" class="view-title" tabindex="-1">일정 확인</h1>
     <p class="lead">이 기기에 저장한 일정이에요. 끝낸 일은 체크해 두세요.</p>
-    <div id="export" class="export" hidden>
-      <p><strong>캘린더에 넣기</strong>를 누르면 Google 캘린더가 내용이 채워진 채로 열려요. 거기서 <strong>저장</strong>을 눌러야 들어가요.</p>
-      <details>
-        <summary>남은 일정 한꺼번에 받기 (.ics 파일)</summary>
-        <div class="row">
-          <label>알림
-            <select id="alarm">
-              <option value="none">없음</option>
-              <option value="1d">1일 전</option>
-              <option value="1h">1시간 전</option>
-            </select>
-          </label>
-          <button id="ics-all" type="button" class="btn"></button>
-        </div>
-        <p class="hint">컴퓨터에서 Google 캘린더 설정의 "가져오기"로 이 파일을 올리면 한 번에 들어가요. 알림은 이 파일에만 들어가요. 폰 Google 캘린더 앱은 이 파일을 바로 못 열어요.</p>
-      </details>
-    </div>
     <div id="agenda" class="agenda"></div>
     <details id="past" class="past" hidden>
       <summary id="past-title"></summary>
@@ -868,7 +829,6 @@
     const upcoming = all.filter((e) => lastDay(e) >= today);
     const past = all.filter((e) => lastDay(e) < today).reverse();
     $('list-empty').hidden = all.length > 0;
-    updateExport();
     fillAgenda($('agenda'), upcoming, today);
     $('past').hidden = past.length === 0;
     $('past-title').textContent = `지난 일정 ${past.length}개`;
@@ -903,7 +863,6 @@
       const it = list.find((x) => x.id === e.id);
       if (it) { it.done = on; writeSaved(list); }
       li.classList.toggle('done', on);
-      updateExport();
     });
     check.setAttribute('aria-label', `${e.title} 끝냄`);
     const t = el('div', 't');
@@ -925,64 +884,8 @@
     if (e.location) meta.append(el('span', null, e.location));
     li.append(check, t, del);
     if (meta.childNodes.length) li.append(meta);
-    li.append(calActions(e));
     return li;
   }
-
-  // Google 캘린더 "일정 추가" 화면을 새 탭으로 연다. 실제로 저장했는지는 알 수 없어서 "열었음"만 기록한다
-  function calActions(e) {
-    const acts = el('div', 'acts');
-    const a = el('a', 'add-cal');
-    a.href = P.buildGoogleUrl(e);
-    a.target = '_blank';
-    a.rel = 'noopener';
-    a.innerHTML = '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">' +
-      '<rect x="2" y="3" width="12" height="11" rx="2"/><path d="M2 6.5h12M5.5 1.5v3M10.5 1.5v3"/></svg>';
-    const label = el('span');
-    a.append(label);
-    const note = el('span', 'sent-note');
-    const show = (sent) => {
-      a.classList.toggle('sent', !!sent);
-      label.textContent = sent ? '다시 넣기' : '캘린더에 넣기';
-      a.setAttribute('aria-label', `${e.title} Google 캘린더에 ${sent ? '다시 ' : ''}넣기`);
-      note.textContent = sent ? 'Google 캘린더에서 열었어요' : '';
-    };
-    show(e.sentAt);
-    a.addEventListener('click', () => {
-      const list = loadSaved();
-      const it = list.find((x) => x.id === e.id);
-      if (it) { it.sentAt = new Date().toISOString(); writeSaved(list); }
-      show(true);
-    });
-    acts.append(a, note);
-    return acts;
-  }
-
-  // 남은 일정(안 끝낸 것)을 .ics 한 파일로
-  const ALARM_KEY = 'capture-calendar:alarm';
-  function leftEvents() {
-    const today = P.todaySeoul();
-    return loadSaved().filter((e) => lastDay(e) >= today && !e.done).sort(byWhen);
-  }
-  function updateExport() {
-    const left = leftEvents().length;
-    $('export').hidden = left === 0;
-    $('ics-all').textContent = `${left}개 받기`;
-  }
-  try { const a = localStorage.getItem(ALARM_KEY); if (a) $('alarm').value = a; } catch (_) { /* 기본값 "없음" */ }
-  $('alarm').addEventListener('change', () => { try { localStorage.setItem(ALARM_KEY, $('alarm').value); } catch (_) { /* 기억 못 해도 됨 */ } });
-  $('ics-all').addEventListener('click', () => {
-    const list = leftEvents();
-    if (!list.length) return;
-    const blob = new Blob([P.buildICS(list, $('alarm').value)], { type: 'text/calendar;charset=utf-8' });
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-    a.download = `일정-${P.todaySeoul()}.ics`;
-    document.body.append(a);
-    a.click();
-    a.remove();
-    setTimeout(() => URL.revokeObjectURL(a.href), 10000);
-  });
 
   // 카드 위 단계 표시: 지금 어디까지 왔는지 보여 주고, 누르면 그 단계로 이동한다
   function renderSteps() {
