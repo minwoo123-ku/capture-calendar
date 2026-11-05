@@ -1,0 +1,13 @@
+# 실제 캡처 이미지(개인정보)는 절대 커밋하지 않는다
+samples/
+*.png
+*.jpg
+*.jpeg
+*.heic
+*.webp
+
+# 로컬 도구 설정
+.claude/
+.vscode/
+Thumbs.db
+desktop.ini
