@@ -16,7 +16,10 @@
   - 작은 글씨: 1차로 읽은 줄 높이 중앙값이 42px보다 낮으면 58px이 되도록 키워(최대 2.5배, 긴 변 4000px) 다시 읽고 그 결과를 쓴다. PC 카톡 크기(13px)에서 2배는 "7시"→"?시", 3.4배는 바르게 읽었다. Tesseract 자신감 점수는 틀린 쪽이 더 높아서 쓰지 않는다.
   - 일정 카드에 "여러 날" 체크와 끝 날짜 칸. 달력에는 기간 전체에 색 동그라미.
 - [ ] ③-3 Google 캘린더 링크와 .ics
-- [ ] ④ git 커밋, GitHub Pages 배포 (③-3보다 먼저 미리보기로 올리기로 함, 2026-11-05)
+- [x] ④ git 커밋, GitHub Pages 배포 (③-3보다 먼저 올림, 2026-11-05)
+  - 저장소 https://github.com/minwoo123-ku/capture-calendar (공개), 주소 https://minwoo123-ku.github.io/capture-calendar/
+  - main 브랜치 루트를 Pages로 내보낸다. 푸시하면 1분 안팎으로 다시 배포된다.
+  - 커밋 작성자 이메일은 GitHub 비공개 주소(…@users.noreply.github.com)를 쓴다. 이 저장소의 git config에만 넣었다.
 
 ## 1. 화면 구성 (폰 세로 화면 기준, 한 페이지에 3단계)
 
