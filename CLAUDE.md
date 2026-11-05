@@ -8,7 +8,8 @@
 
 - API 키나 개인정보를 코드·GitHub에 넣지 않는다. 실제 캡처 이미지는 `samples/`에만 두고 커밋하지 않는다(.gitignore). 테스트 문장은 지어낸 것만 쓴다.
 - 이미지는 브라우저 안에서만 처리하고 밖으로 보내지 않는다. CDN에서는 코드와 언어 데이터만 받는다.
-- 추출 결과는 반드시 확인·수정 화면을 거친 뒤 내보낸다. 자동 등록은 하지 않는다("확인 완료"를 눌러야 내보내기가 열린다).
+- 추출 결과는 반드시 확인·수정 화면을 거친 뒤 저장하거나 내보낸다. 자동 등록은 하지 않는다("확인 완료"를 눌러야 저장 버튼이 열린다).
+- 저장한 일정은 이 기기 브라우저의 localStorage에만 둔다. 서버나 다른 곳으로 보내지 않는다.
 - 모르는 건 추측하지 말고 먼저 사용자에게 묻는다.
 - 단계(① parser → ② 화면·OCR → ③ 내보내기 → ④ 배포)마다 끝나면 멈추고 결과를 보여 준다. git push처럼 밖으로 나가는 작업은 직전에 한 번 더 확인받는다.
 
@@ -34,7 +35,7 @@
 
 ## 구조
 
-- `index.html` 화면, CSS, OCR 연결, 내보내기 버튼
+- `index.html` 화면, CSS, OCR 연결, 저장. 화면은 해시로 셋: `#` 처음(버튼 두 개), `#capture` 캡처 올리기·확인·저장, `#list` 날짜별 할 일 목록
 - `parser.js` 순수 함수: `normalizeText`, `detectBaseDate`, `extractEvents`, `todaySeoul` (③-3에서 `buildGoogleUrl`, `buildICS` 추가). 일정 모양은 `{title,date,endDate,start,end,allDay,location,memo,isDeadline,warnings}`이고 `endDate`는 여러 날 일정의 마지막 날(그날 포함)이다.
 - `test/parser.test.js` node:test 단위 테스트
 - `plan.md` 계획과 확정된 해석 규칙

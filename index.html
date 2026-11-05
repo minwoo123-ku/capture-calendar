@@ -32,17 +32,30 @@
     }
   }
   * { box-sizing: border-box; }
+  [hidden] { display: none !important; } /* 화면 전환: display를 정한 요소도 hidden이면 숨긴다 */
   html { -webkit-text-size-adjust: 100%; }
   body { margin: 0; background: var(--bg); color: var(--text); font: 400 16px/1.6 var(--sans); letter-spacing: -0.01em; }
   :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
-  /* ---- 배치: 폰은 위아래, 넓은 화면은 왼쪽 소개 + 오른쪽 카드 ---- */
-  .page { max-width: 1180px; margin: 0 auto; padding: 28px 16px 40px; }
+  /* ---- 배치: 화면 세 개(처음, 캡처, 캘린더). 캡처 화면만 넓은 화면에서 왼쪽 달력 + 오른쪽 카드 ---- */
+  .page { max-width: 1180px; margin: 0 auto; padding: 24px 16px 40px; }
+  .narrow { max-width: 640px; margin: 0 auto; }
+  .topbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 8px; }
+  .home-link { text-decoration: none; }
+  .back { font: inherit; font-size: 0.95rem; color: var(--soft); background: none; border: 0; padding: 8px 0; cursor: pointer; text-decoration: none; }
+  .back:hover { color: var(--ink); }
+  /* 폰: 캡처 화면에서는 올리기 카드를 먼저, 달력은 그 아래 */
+  @media (max-width: 959px) {
+    .capture-layout:not([hidden]) { display: flex; flex-direction: column; }
+    .capture-layout .intro { display: contents; }
+    .capture-layout .card { order: 1; }
+    .capture-layout #months, .capture-layout #months-note { order: 2; }
+  }
   @media (min-width: 960px) {
-    .page { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 580px); column-gap: clamp(48px, 7vw, 110px); padding: 64px 40px 56px; }
-    .intro { position: sticky; top: 48px; align-self: start; padding-top: 24px; }
+    .page { padding: 48px 40px 56px; }
+    .capture-layout { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 580px); column-gap: clamp(48px, 7vw, 110px); }
+    .intro { position: sticky; top: 32px; align-self: start; padding-top: 16px; }
     .intro.tall { position: static; }
-    .page > footer { grid-column: 1 / -1; }
   }
 
   /* 손으로 그린 펜 동그라미. 오늘 날짜, 앱 표시, 끌어다 놓는 자리에 쓴다 */
@@ -59,7 +72,59 @@
     background: var(--hl); border-radius: 0.1em; transform: rotate(-1.6deg);
   }
   .lead { margin: 18px 0 0; color: var(--soft); line-height: 1.8; }
-  @media (min-width: 960px) { h1 { margin-top: 56px; } .lead { margin-top: 24px; } }
+  @media (min-width: 960px) { #view-home h1 { margin-top: 72px; } .lead { margin-top: 24px; } }
+  .view-title { margin: 20px 0 0; font-size: clamp(1.7rem, 1.3rem + 1.6vw, 2.3rem); }
+
+  /* ---- 처음 화면: 큰 버튼 두 개 ---- */
+  .home-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 36px; }
+  .tile {
+    position: relative; display: flex; flex-direction: column; justify-content: space-between; gap: 28px;
+    min-height: 168px; padding: 20px 18px 18px; border-radius: 20px; text-decoration: none;
+    background: var(--card); border: 1px solid var(--line); color: var(--ink); box-shadow: var(--shadow);
+    transition: transform 0.15s;
+  }
+  .tile:hover { transform: translateY(-2px); }
+  .tile.dark { background: var(--accent); border-color: var(--accent); color: var(--btn-ink); }
+  .tile strong { display: block; font-size: 1.5rem; font-weight: 800; letter-spacing: -0.03em; }
+  .tile .tile-sub { display: block; font-size: 0.88rem; opacity: 0.75; margin-top: 2px; }
+  .tile-icon { position: relative; display: grid; place-items: center; width: 44px; height: 44px; font-size: 1.5rem; font-weight: 300; }
+  .tile.dark .tile-icon { font-size: 1.05rem; font-weight: 800; }
+  .tile.dark .loop { color: var(--hl); }
+  .next { margin-top: 36px; }
+  .next h2 { font-size: 0.95rem; font-weight: 700; color: var(--soft); margin: 0 0 6px; }
+  .next-list { list-style: none; margin: 0; padding: 0; }
+  .next-list li { display: grid; grid-template-columns: 64px 1fr; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--line); color: var(--ink); }
+  .next-list .d8 { font-weight: 800; font-variant-numeric: tabular-nums; }
+  .next-empty { color: var(--soft); font-size: 0.92rem; margin: 0; }
+
+  /* ---- 캘린더 화면: 날짜 라벨 아래로 할 일을 쭉 ---- */
+  .agenda { margin-top: 28px; }
+  .day-group { padding: 14px 0 6px; border-top: 1.5px solid var(--ink); }
+  .day-group + .day-group { margin-top: 10px; }
+  .day-head { display: flex; align-items: baseline; gap: 8px; margin-bottom: 6px; color: var(--ink); }
+  .day-head .md { font-size: 1.6rem; font-weight: 800; letter-spacing: -0.03em; font-variant-numeric: tabular-nums; }
+  .day-head .wd { font-weight: 600; }
+  .day-head .wd.sunday { color: var(--sun); }
+  .day-head .wd.saturday { color: var(--sat); }
+  .day-head .rel { margin-left: auto; font-size: 0.85rem; color: var(--soft); }
+  .day-head .rel.soon { color: var(--pen); font-weight: 700; }
+  .todo { list-style: none; margin: 0; padding: 0; }
+  .todo li { display: grid; grid-template-columns: 26px 1fr auto; align-items: start; gap: 4px 10px; padding: 10px 0; }
+  .todo li + li { border-top: 1px dashed var(--line-strong); }
+  .todo input[type=checkbox] { width: 20px; height: 20px; margin: 3px 0 0; accent-color: var(--accent); }
+  .todo .t { font-size: 1.08rem; font-weight: 600; color: var(--ink); overflow-wrap: anywhere; }
+  .todo .tag { display: inline-block; font-size: 0.75rem; font-weight: 700; color: var(--pen); border: 1.5px solid currentColor; border-radius: 6px; padding: 0 5px; margin-right: 6px; vertical-align: 2px; }
+  .todo .meta { grid-column: 2; font-size: 0.86rem; color: var(--soft); }
+  .todo .meta span + span { margin-left: 10px; }
+  .todo li.done .t { text-decoration: line-through; color: var(--soft); }
+  .todo .del { font: inherit; font-size: 0.82rem; color: var(--soft); background: none; border: 0; padding: 4px 0; cursor: pointer; }
+  .todo .del:hover { color: var(--sun); }
+  .past { margin-top: 36px; }
+  .past summary { cursor: pointer; color: var(--soft); font-size: 0.92rem; margin-bottom: 8px; }
+  .empty { margin-top: 32px; padding: 28px 20px; border: 1.5px dashed var(--line-strong); border-radius: 16px; text-align: center; color: var(--soft); }
+  .empty .btn { margin-top: 14px; }
+  .saved-note { margin: 0 0 20px; padding: 14px 16px; border-radius: 12px; background: var(--soft-fill); color: var(--ink); font-size: 0.92rem; }
+  .saved-note a { color: var(--ink); font-weight: 600; margin-left: 6px; }
 
   /* ---- 달력 ---- */
   .months { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px; margin: 32px 0 8px; }
@@ -208,7 +273,7 @@
   .summary li { padding: 12px 0; border-bottom: 1px solid var(--line); color: var(--ink); font-weight: 500; }
   .summary .when { display: block; font-size: 0.85rem; font-weight: 400; color: var(--soft); font-variant-numeric: tabular-nums; }
   .summary .where { color: var(--soft); font-weight: 400; }
-  .page > footer { margin-top: 40px; color: var(--soft); font-size: 0.8rem; }
+  .page > footer { margin-top: 48px; color: var(--soft); font-size: 0.8rem; }
   @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
 </style>
 </head>
@@ -221,14 +286,56 @@
   </symbol>
 </svg>
 <div class="page">
-  <aside id="intro" class="intro">
-    <p class="brand">
+  <header class="topbar">
+    <a class="brand home-link" href="#">
       <span class="brand-day"><svg class="loop" aria-hidden="true"><use href="#loop"/></svg><span id="brand-day"></span></span>
       캡처를 캘린더로
-    </p>
-    <h1>캡처 한 장이,<br>내 <mark>일정</mark>이 되도록.</h1>
-    <p class="lead">카톡, 문자, 메일 캡처 속 약속을 찾아요.<br>내가 확인한 일정만 캘린더에 넣어요.</p>
-    <div id="months" class="months" aria-label="일정이 들어갈 달력"></div>
+    </a>
+    <a id="back" class="back" href="#" hidden>처음으로</a>
+  </header>
+
+  <!-- 처음 화면 -->
+  <section id="view-home" class="view narrow" aria-labelledby="home-title">
+    <h1 id="home-title" tabindex="-1">캡처 한 장이,<br>내 <mark>일정</mark>이 되도록.</h1>
+    <p class="lead">카톡, 문자, 메일 캡처 속 약속을 찾아요.<br>내가 확인한 일정만 이 기기에 저장해요.</p>
+    <div class="home-actions">
+      <a class="tile" href="#capture">
+        <span class="tile-icon" aria-hidden="true"><svg class="loop"><use href="#loop"/></svg>+</span>
+        <span><strong>캡처</strong><span class="tile-sub">캡처 올려서 일정 저장</span></span>
+      </a>
+      <a class="tile dark" href="#list">
+        <span class="tile-icon" aria-hidden="true"><svg class="loop"><use href="#loop"/></svg><span id="tile-day"></span></span>
+        <span><strong>캘린더</strong><span id="home-count" class="tile-sub">저장한 일정 보기</span></span>
+      </a>
+    </div>
+    <div class="next">
+      <h2>다가오는 일정</h2>
+      <ul id="next-list" class="next-list"></ul>
+      <p id="next-empty" class="next-empty" hidden>아직 저장한 일정이 없어요. 캡처부터 올려 보세요.</p>
+    </div>
+  </section>
+
+  <!-- 캘린더 화면: 날짜 라벨 + 할 일 목록 -->
+  <section id="view-list" class="view narrow" aria-labelledby="list-title" hidden>
+    <h1 id="list-title" class="view-title" tabindex="-1">캘린더</h1>
+    <p class="lead">이 기기에 저장한 일정이에요. 끝낸 일은 체크해 두세요.</p>
+    <div id="agenda" class="agenda"></div>
+    <details id="past" class="past" hidden>
+      <summary id="past-title"></summary>
+      <div id="past-agenda"></div>
+    </details>
+    <div id="list-empty" class="empty" hidden>
+      아직 저장한 일정이 없어요.<br>
+      <a class="btn" href="#capture">캡처 올리러 가기</a>
+    </div>
+  </section>
+
+  <!-- 캡처 화면 -->
+  <section id="view-capture" class="view capture-layout" aria-labelledby="capture-title" hidden>
+  <aside id="intro" class="intro">
+    <h1 id="capture-title" class="view-title" tabindex="-1">캡처 올리기</h1>
+    <p class="lead">찾은 일정이 달력에 표시돼요.<br>확인하고 저장하면 캘린더에 들어가요.</p>
+    <div id="months" class="months" aria-label="찾은 일정이 들어갈 달력"></div>
     <p id="months-note" class="months-note" hidden></p>
   </aside>
 
@@ -238,10 +345,11 @@
       <i class="link"></i>
       <button type="button" data-step="2"><span class="num">2</span><span class="lbl">확인하기</span></button>
       <i class="link"></i>
-      <button type="button" data-step="3"><span class="num">3</span><span class="lbl">캘린더에 넣기</span></button>
+      <button type="button" data-step="3"><span class="num">3</span><span class="lbl">저장하기</span></button>
     </nav>
 
     <section id="step1" class="step">
+      <p id="saved-note" class="saved-note" hidden></p>
       <h2>캡처를 올려 주세요</h2>
       <p class="sub">이미지는 이 기기 안에서만 읽고 어디에도 보내지 않아요.</p>
       <label class="drop" for="file">
@@ -270,16 +378,19 @@
     </section>
 
     <section id="step3" class="step locked" hidden>
-      <h2>캘린더에 넣기</h2>
+      <h2>저장하기</h2>
       <p id="locked" class="sub">위 일정을 확인하고 '확인 완료'를 누르면 열려요.</p>
       <div id="export" hidden>
         <ul id="summary" class="summary"></ul>
-        <p class="hint">Google 캘린더 추가와 .ics 파일 받기는 다음 단계에서 여기에 붙어요.</p>
+        <button id="save" type="button" class="btn primary">캘린더에 저장</button>
+        <p class="hint">이 기기의 이 브라우저에만 저장돼요. 다른 기기와는 공유되지 않아요.</p>
+        <p id="save-error" class="error" hidden></p>
       </div>
     </section>
   </main>
+  </section>
 
-  <footer>글자 인식은 Tesseract.js로 이 기기에서 해요. 시간은 모두 서울 기준이에요.</footer>
+  <footer>글자 인식은 Tesseract.js로 이 기기에서 해요. 캡처와 일정은 밖으로 보내지 않아요. 시간은 모두 서울 기준이에요.</footer>
 </div>
 
 <!-- Tesseract.js: 버전 고정 + 무결성 검사. 이미지는 보내지 않고 코드·언어 데이터만 받는다 -->
@@ -527,6 +638,7 @@
   }
 
   async function drain() {
+    $('saved-note').hidden = true;
     setBusy(true);
     state.reading = { n: 0, total: queue.length };
     while (queue.length) {
@@ -645,6 +757,149 @@
     intro.classList.toggle('tall', intro.offsetHeight > window.innerHeight - 80);
   }
   window.addEventListener('resize', fitIntro);
+
+  // ------------------------------------------------------------ 저장소 (이 기기의 이 브라우저에만)
+
+  const STORE_KEY = 'capture-calendar:events:v1';
+  function loadSaved() {
+    try {
+      const list = JSON.parse(localStorage.getItem(STORE_KEY) || '[]');
+      return Array.isArray(list) ? list.filter((e) => e && isDay(e.date)) : [];
+    } catch (err) { return []; }
+  }
+  function writeSaved(list) {
+    try { localStorage.setItem(STORE_KEY, JSON.stringify(list)); return true; } catch (err) { return false; }
+  }
+  const savedKey = (e) => `${e.date}|${e.allDay ? '' : e.start}|${e.title.trim()}`;
+  const newId = () => (window.crypto && crypto.randomUUID ? crypto.randomUUID() : String(Date.now()) + Math.random().toString(16).slice(2));
+
+  // 확인 완료한 일정 중 고른 것만 저장한다. 같은 날짜·시간·제목은 한 번만
+  function saveChosen() {
+    const saved = loadSaved();
+    const have = new Set(saved.map(savedKey));
+    let added = 0, skipped = 0;
+    for (const ev of state.events.filter((e) => e.selected)) {
+      const item = {
+        id: newId(), title: ev.title.trim(), date: ev.date, endDate: ev.endDate || null,
+        start: ev.allDay ? null : ev.start, end: ev.allDay ? null : ev.end, allDay: ev.allDay,
+        location: (ev.location || '').trim(), memo: ev.memo || '', isDeadline: !!ev.isDeadline,
+        done: false, savedAt: new Date().toISOString(),
+      };
+      if (have.has(savedKey(item))) { skipped++; continue; }
+      have.add(savedKey(item));
+      saved.push(item);
+      added++;
+    }
+    if (!writeSaved(saved)) return null;
+    return { added, skipped };
+  }
+
+  // ------------------------------------------------------------ 화면 전환 (#, #capture, #list)
+
+  function route() {
+    const name = location.hash === '#capture' ? 'capture' : location.hash === '#list' ? 'list' : 'home';
+    for (const v of ['home', 'capture', 'list']) $('view-' + v).hidden = v !== name;
+    $('back').hidden = name === 'home';
+    if (name === 'home') renderHome();
+    if (name === 'list') renderList();
+    if (name === 'capture') renderMonths();
+    window.scrollTo(0, 0);
+    const title = { home: 'home-title', capture: 'capture-title', list: 'list-title' }[name];
+    if (document.activeElement && document.activeElement !== document.body) $(title).focus({ preventScroll: true });
+  }
+  window.addEventListener('hashchange', route);
+
+  const byWhen = (a, b) => (a.date + (a.allDay ? '' : a.start || '')).localeCompare(b.date + (b.allDay ? '' : b.start || ''));
+  const shortDate = (ymd) => { const [, m, d] = ymd.split('-').map(Number); return `${m}/${d}`; };
+  const lastDay = (e) => e.endDate || e.date;
+
+  function renderHome() {
+    const today = P.todaySeoul();
+    const upcoming = loadSaved().filter((e) => lastDay(e) >= today && !e.done).sort(byWhen);
+    $('home-count').textContent = upcoming.length ? `남은 일정 ${upcoming.length}개` : '저장한 일정 보기';
+    const ul = $('next-list');
+    ul.textContent = '';
+    upcoming.slice(0, 3).forEach((e) => {
+      const li = el('li');
+      li.append(el('span', 'd8', shortDate(e.date)), el('span', null, e.title));
+      ul.append(li);
+    });
+    $('next-empty').hidden = upcoming.length > 0;
+  }
+
+  // 오늘·내일·D-n
+  function relLabel(ymd, today) {
+    const n = Math.round((Date.UTC(...ymd.split('-').map((x, i) => Number(x) - (i === 1 ? 1 : 0))) -
+      Date.UTC(...today.split('-').map((x, i) => Number(x) - (i === 1 ? 1 : 0)))) / 86400000);
+    if (n === 0) return { text: '오늘', soon: true };
+    if (n === 1) return { text: '내일', soon: true };
+    if (n > 1) return { text: `D-${n}`, soon: n <= 3 };
+    return { text: `${-n}일 전`, soon: false };
+  }
+
+  function renderList() {
+    const today = P.todaySeoul();
+    const all = loadSaved().sort(byWhen);
+    const upcoming = all.filter((e) => lastDay(e) >= today);
+    const past = all.filter((e) => lastDay(e) < today).reverse();
+    $('list-empty').hidden = all.length > 0;
+    fillAgenda($('agenda'), upcoming, today);
+    $('past').hidden = past.length === 0;
+    $('past-title').textContent = `지난 일정 ${past.length}개`;
+    fillAgenda($('past-agenda'), past, today);
+  }
+
+  function fillAgenda(box, list, today) {
+    box.textContent = '';
+    const groups = new Map();
+    list.forEach((e) => { if (!groups.has(e.date)) groups.set(e.date, []); groups.get(e.date).push(e); });
+    for (const [date, items] of groups) {
+      const [y, m, d] = date.split('-').map(Number);
+      const wd = weekdayOf(y, m, d);
+      const g = el('section', 'day-group');
+      const head = el('div', 'day-head');
+      const rel = relLabel(date, today);
+      head.append(el('span', 'md', `${m}/${d}`),
+        el('span', 'wd' + (wd === 0 ? ' sunday' : wd === 6 ? ' saturday' : ''), WEEKDAYS_KO[wd]),
+        el('span', 'rel' + (rel.soon ? ' soon' : ''), rel.text));
+      const ul = el('ul', 'todo');
+      items.forEach((e) => ul.append(todoItem(e)));
+      g.append(head, ul);
+      box.append(g);
+    }
+  }
+
+  function todoItem(e) {
+    const li = el('li');
+    li.classList.toggle('done', !!e.done);
+    const check = checkbox(!!e.done, (on) => {
+      const list = loadSaved();
+      const it = list.find((x) => x.id === e.id);
+      if (it) { it.done = on; writeSaved(list); }
+      li.classList.toggle('done', on);
+    });
+    check.setAttribute('aria-label', `${e.title} 끝냄`);
+    const t = el('div', 't');
+    // 제목 앞 "[마감]"은 작은 표로 바꿔 보여 준다
+    const title = e.title.replace(/^\[마감\]\s*/, '');
+    if (e.isDeadline || title !== e.title) t.append(el('span', 'tag', '마감'));
+    t.append(document.createTextNode(title));
+    const del = el('button', 'del', '지우기');
+    del.type = 'button';
+    del.addEventListener('click', () => {
+      if (!confirm(`"${e.title}"을(를) 지울까요?`)) return;
+      writeSaved(loadSaved().filter((x) => x.id !== e.id));
+      renderList();
+    });
+    const meta = el('div', 'meta');
+    const when = e.allDay ? (e.isDeadline ? '' : '종일') : `${e.start}–${e.end}`;
+    if (e.endDate) meta.append(el('span', null, `${shortDate(e.endDate)}까지`));
+    if (when) meta.append(el('span', null, when));
+    if (e.location) meta.append(el('span', null, e.location));
+    li.append(check, t, del);
+    if (meta.childNodes.length) li.append(meta);
+    return li;
+  }
 
   // 카드 위 단계 표시: 지금 어디까지 왔는지 보여 주고, 누르면 그 단계로 이동한다
   function renderSteps() {
@@ -944,6 +1199,30 @@
     $('step3').scrollIntoView({ behavior: 'smooth', block: 'start' });
   });
 
+  $('save').addEventListener('click', () => {
+    if (!state.confirmed) return;
+    const result = saveChosen();
+    if (!result) {
+      $('save-error').textContent = '이 브라우저에서는 저장할 수 없어요. 사생활 보호(시크릿) 모드인지 확인해 주세요.';
+      $('save-error').hidden = false;
+      return;
+    }
+    $('save-error').hidden = true;
+    // 저장한 캡처와 후보는 비우고, 처음 상태로 돌아가 결과를 알려 준다
+    state.sources.forEach((src) => URL.revokeObjectURL(src.imgUrl));
+    state.sources = [];
+    state.events = [];
+    state.confirmed = false;
+    const note = $('saved-note');
+    note.textContent = `일정 ${result.added}개를 저장했어요.` + (result.skipped ? ` 이미 있던 ${result.skipped}개는 뺐어요.` : '');
+    const go = el('a', null, '캘린더에서 보기');
+    go.href = '#list';
+    note.append(go);
+    note.hidden = false;
+    renderAll();
+    window.scrollTo(0, 0);
+  });
+
   $('add-event').addEventListener('click', () => {
     const ev = toUiEvent({
       title: '', date: P.todaySeoul(), endDate: null, start: null, end: null, allDay: true,
@@ -964,7 +1243,10 @@
   document.addEventListener('paste', (e) => {
     const items = Array.from((e.clipboardData && e.clipboardData.items) || []);
     const images = items.filter((it) => it.type.startsWith('image/')).map((it) => it.getAsFile());
-    if (images.length) { e.preventDefault(); enqueue(images); }
+    if (!images.length) return;
+    e.preventDefault();
+    if (location.hash !== '#capture') location.hash = '#capture';
+    enqueue(images);
   });
   document.addEventListener('dragover', (e) => {
     if (!Array.from(e.dataTransfer.types).includes('Files')) return;
@@ -977,12 +1259,13 @@
     const files = Array.from((e.dataTransfer && e.dataTransfer.files) || []);
     if (!files.length) return;
     e.preventDefault();
+    if (location.hash !== '#capture') location.hash = '#capture';
     enqueue(files);
   });
 
-  $('brand-day').textContent = String(Number(P.todaySeoul().slice(8)));
-  renderMonths();
+  $('brand-day').textContent = $('tile-day').textContent = String(Number(P.todaySeoul().slice(8)));
   renderSteps();
+  route();
   if (typeof Tesseract === 'undefined') showError(friendlyError());
 })();
 </script>
