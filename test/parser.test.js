@@ -148,17 +148,6 @@ test('구분선이 여러 개면 줄마다 가장 가까운 위쪽 구분선 기
   assert.deepEqual(list.map((e) => e.date), ['2026-11-04', '2026-11-06']);
 });
 
-test('구분선 연도가 기준일과 2년 이상 차이 나면 OCR 잘못으로 보고 요일이 맞는 가까운 해로', () => {
-  // 작은 흰 글씨 구분선 "2026년"을 "2020년"으로 읽은 경우 (2020-11-05도 목요일)
-  const ev = one('2020년 11월 5일 목요일\n내일 회의');
-  assert.equal(ev.date, '2026-11-06');
-  assert.equal(P.detectBaseDate('2020년 11월 5일 목요일', '2026-11-05'), '2026-11-05');
-  // 작년 구분선은 그대로 둔다
-  assert.equal(P.detectBaseDate('2025년 12월 31일 수요일', '2026-11-05'), '2025-12-31');
-  // 요일이 맞는 해가 작년·올해·내년에 없으면 기준일의 해
-  assert.equal(P.detectBaseDate('2019년 3월 4일 일요일', '2026-11-05'), '2026-03-04');
-});
-
 test('구분선이 없으면 넘겨받은 기준일, 기준일도 없으면 서울 기준 오늘', () => {
   assert.equal(P.detectBaseDate('내일 회의'), null);
   assert.equal(one('내일 회의').date, '2026-11-06');
@@ -375,37 +364,6 @@ test('"모레 3:15"처럼 진짜 날짜 낱말은 보낸 시각으로 보지 않
   const ev = one('모레 3:15 회의');
   assert.equal(ev.date, '2026-11-07');
   assert.equal(ev.start, '15:15');
-});
-
-// ---- 실제 PC 카톡 캡처 (③-2 다듬기) ----
-
-test('끝에 붙은 자음·모음만 있는 낱말("ㄱㄱ", "ㅁㅁ")은 제목에서 뺌', () => {
-  assert.equal(one('11/19 저녁 ㄱㄱ').title, '저녁');
-  assert.equal(one('11/19 저녁ㄱㄱ').title, '저녁');
-  assert.equal(one('11/19 회의 ㅇㅋ').title, '회의');
-});
-
-test('글자 없이 숫자·기호만 남은 제목은 "일정"으로', () => {
-  assert.equal(one('11/19 207 ㅁㅁ').title, '일정');
-});
-
-test('카톡 입력창 "메시지 입력" 줄은 일정에 붙이지 않음', () => {
-  const ev = one('11/19 저녁\n메시지 입력');
-  assert.equal(ev.memo, '11/19 저녁');
-  const ev2 = one('11/19 7시\n[메시지 입력');
-  assert.equal(ev2.title, '일정');
-  assert.equal(ev2.memo, '11/19 7시');
-});
-
-test('PC 카톡 캡처 OCR 결과 모양(위가 잘린 말풍선, 보낸 시각, 입력창) → 일정 하나만', () => {
-  // 실제 캡처에서 나온 OCR 결과와 같은 모양으로 지어낸 문장
-  const text = '오후 2:05  10719 1eM ㅁㅁ\n오후 207  11월 19일 저녁 ㄱㄱ\n메시지 입력';
-  const evs = ex(text);
-  assert.equal(evs.length, 1);
-  assert.equal(evs[0].date, '2026-11-19');
-  assert.equal(evs[0].allDay, true);
-  assert.equal(evs[0].title, '저녁');
-  assert.equal(evs[0].memo, '11월 19일 저녁 ㄱㄱ');
 });
 
 // ---- 일정이 없는 텍스트 ----

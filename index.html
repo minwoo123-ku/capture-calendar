@@ -509,6 +509,10 @@
     });
   }
 
+  // 기본 확대 배율: 폭이 1000px보다 작은 캡처만 키운다
+  function baseScale(img) {
+    return img.naturalWidth < 1000 ? Math.min(2, 1600 / img.naturalWidth) : 1;
+  }
   const MAX_SIDE = 4000; // 폰 메모리 보호
 
   // 캡처를 흑백으로 읽어 두고(scale만큼 확대), 이진화에 쓸 누적합 표를 만든다
@@ -572,14 +576,11 @@
   }
 
   const median = (xs) => { const s = xs.slice().sort((a, b) => a - b); return s.length ? s[s.length >> 1] : 0; };
-  // 줄 높이(Tesseract 줄 상자, 원래 크기 기준)가 이보다 낮으면 작은 글씨로 보고 확대해서도 읽어 본다.
-  // 어느 배율이 나은지는 캡처마다 달랐다(plan.md "작은 글씨"):
-  //   실제 PC 카톡 캡처는 원래 크기(신뢰도 79)가 맞고 2배(72)는 깨졌다.
-  //   지어낸 PC 캡처는 2배(82)에서 "7시"를 "?시"로 읽고 3.5배(84)가 맞았다.
-  // 1·1.5·2·2.5·3·3.5배로 모두 읽어 보니, 1·2·3.5배 중 Tesseract 신뢰도가 가장 높은 쪽이
-  // 두 캡처 모두 바른 결과였다(실제 1배 79, 지어낸 것 3.5배 84). 그래서 이 셋 중에서 고른다.
+  // 줄 높이(Tesseract 줄 상자)가 이보다 낮으면 작은 글씨로 보고 목표 높이까지 키워 다시 읽는다.
+  // 지어낸 캡처로 잼: 폰 크기는 48px 안팎에서 잘 읽혔고, PC 카톡(13px 글씨)은 2배 확대 때 35px에서
+  // "7시"를 "?시"로 읽었으며 61px(3.4배)에서는 바르게 읽었다. 실제 캡처로 다시 맞춰야 한다.
   const SMALL_LINE_PX = 42;
-  const UPSCALES = [2, 3.5];
+  const TARGET_LINE_PX = 58;
 
   async function readPass(img, scale) {
     const prep = prepare(img, scale);
@@ -588,22 +589,19 @@
     return { prep, data, lines: readLines(data) };
   }
 
-  // 1차: 원래 크기로 영역별 이진화해서 읽는다.
-  // 작은 글씨(PC 카톡 등)면 2배·3.5배로도 읽고, 신뢰도가 가장 높은 결과를 쓴다.
+  // 1차: 영역별 이진화로 전체를 읽는다.
+  // 작은 글씨(PC 카톡 등)면 줄 높이를 재서 그만큼 키워 다시 읽고 그 결과를 쓴다.
+  // (Tesseract 자신감 점수로 고르면 오히려 틀린 2배 쪽이 뽑혀서 쓰지 않는다)
   // 날짜 구분선이 안 나왔으면 반대 방향으로 한 번 더 읽어 구분선 줄만 골라 위치에 맞게 끼워 넣는다.
   async function recognize(img) {
-    const maxScale = MAX_SIDE / Math.max(img.naturalWidth, img.naturalHeight);
-    let pass = await readPass(img, Math.min(1, maxScale));
+    let pass = await readPass(img, baseScale(img));
     const lineH = median(pass.lines.map((l) => l.h));
     if (lineH && lineH < SMALL_LINE_PX) {
-      const tries = [];
-      for (const s of UPSCALES.map((x) => Math.min(x, maxScale))) {
-        if (s > 1.2 && tries.every((t) => Math.abs(t - s) > 0.3)) tries.push(s);
-      }
-      for (const s of tries) {
-        showProgress('글씨가 작아서 크게 해서도 읽어 보는 중', 0);
-        const again = await readPass(img, s);
-        if (again.data.confidence > pass.data.confidence) pass = again;
+      const bigger = Math.min(pass.prep.scale * Math.min(2.5, TARGET_LINE_PX / lineH),
+        MAX_SIDE / Math.max(img.naturalWidth, img.naturalHeight));
+      if (bigger > pass.prep.scale * 1.2) {
+        showProgress('글씨가 작아서 크게 해서 다시 읽는 중', 0);
+        pass = await readPass(img, bigger);
       }
     }
     let lines = pass.lines;
@@ -617,7 +615,6 @@
     }
     return lines.map((l) => l.text).join('\n');
   }
-
 
   // 여러 장은 차례대로 읽는다. 읽는 중에 더 올리면 줄 끝에 붙인다
   const queue = [];
