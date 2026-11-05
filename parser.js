@@ -107,10 +107,27 @@
   const STAMP_RE = /^(?:\d{1,3} ?)?(?:오전|오후)? ?\d{1,2}:\d{2}$/;
   const FUZZY_STAMP_RE = new RegExp(`^${FUZZY_SRC}$`);
   const isStamp = (line) => STAMP_RE.test(line) || FUZZY_STAMP_RE.test(line);
+  // 캡처 아래쪽 카톡 입력창. 말풍선이 아니라서 앞 일정에 붙이지 않는다
+  const UI_LINE_RE = /^[^가-힣A-Za-z0-9]{0,3}메시지 ?입력/;
 
-  function readDivider(line) {
+  // 구분선은 작은 흰 글씨라 OCR이 연도 숫자를 자주 틀린다("2026년"→"2020년").
+  // 기준일과 2년 이상 차이 나면 잘못 읽은 것으로 보고, 올해·작년·내년 중 요일이 맞는 해로 바꾼다.
+  function readDivider(line, ref) {
     const m = DIVIDER_RE.exec(line);
-    return m ? exact(+m[1], +m[2], +m[3]) : null;
+    if (!m) return null;
+    const mo = +m[2];
+    const d = +m[3];
+    let y = +m[1];
+    const refYear = fromDayNum(ref).y;
+    if (Math.abs(y - refYear) >= 2) {
+      const wd = WEEKDAYS.indexOf(m[4]);
+      const fit = [refYear, refYear - 1, refYear + 1].find((yy) => {
+        const day = exact(yy, mo, d);
+        return day != null && weekdayOf(day) === wd;
+      });
+      y = fit != null ? fit : refYear;
+    }
+    return exact(y, mo, d);
   }
 
   // ---------------------------------------------------------------- 날짜 찾기
@@ -231,7 +248,8 @@
 
   // 대화체 제목을 일정 이름으로 다듬는다 (원래 문장은 메모에 그대로 남는다)
   const LEAD_FILLER_RE = /^(?:그리고|혹시|근데|그럼|그러면|아|네|저기|참|그래서) +/;
-  const TAIL_NOISE_RE = /(?: *(?:[ㅎㅋㅠㅜ]+|[!?~.^]+|\p{Extended_Pictographic}+))+$/u;
+  // 끝의 자음·모음만 있는 낱말(ㅎㅎ, ㄱㄱ, ㅇㅋ), 문장부호, 이모지
+  const TAIL_NOISE_RE = /(?: *(?:[ㄱ-ㆎ]+|[!?~.^]+|\p{Extended_Pictographic}+))+$/u;
   // 말풍선 꼬리·보낸 시각을 OCR이 읽은 찌꺼기: 숫자·기호로 시작하는 4자 이하 낱말, 또는 영문 1~2자
   const TAIL_JUNK_RE = /(?: +(?:[^가-힣A-Za-z\s][^가-힣\s]{0,3}|[A-Za-z]{1,2}[^가-힣A-Za-z\s]{0,2}))+$/;
   const ENDING_RES = [
@@ -263,7 +281,9 @@
       s = s.trim();
       if (s === before) break;
     }
-    return s || title;
+    // 글자 없이 숫자·기호만 남으면("121") OCR 찌꺼기로 보고 비운다
+    const out = s || title;
+    return /[가-힣A-Za-z]/.test(out) ? out : '';
   }
 
   // 여러 날 일정의 끝 날짜: 날짜 바로 뒤의 "~11/8", "-12/2", "부터 8일까지"
@@ -299,9 +319,10 @@
   // ---------------------------------------------------------------- 공개 함수
 
   /** 캡처 속 첫 번째 카톡 날짜 구분선의 날짜. 없으면 null */
-  function detectBaseDate(text) {
+  function detectBaseDate(text, today) {
+    const ref = parseDay(today || todaySeoul());
     for (const line of normalizeText(text).split('\n')) {
-      const day = readDivider(line);
+      const day = readDivider(line, ref);
       if (day != null) return fmtDay(day);
     }
     return null;
@@ -314,7 +335,8 @@
    * @returns {{title,date,endDate,start,end,allDay,location,memo,isDeadline,warnings}[]}
    */
   function extractEvents(text, baseDate) {
-    let lineBase = parseDay(baseDate || todaySeoul());
+    const ref = parseDay(baseDate || todaySeoul());
+    let lineBase = ref;
     const events = [];
     let lastDay = null; // 위쪽에서 마지막으로 찾은 날짜
     let last = null; // 마지막 후보
@@ -325,14 +347,14 @@
 
     for (const line of normalizeText(text).split('\n')) {
       if (!line) continue;
-      const dividerDay = readDivider(line);
+      const dividerDay = readDivider(line, ref);
       if (dividerDay != null) {
         lineBase = dividerDay;
         lastDay = null;
         last = null;
         continue;
       }
-      if (isStamp(line)) {
+      if (isStamp(line) || UI_LINE_RE.test(line)) {
         open = false;
         continue;
       }
